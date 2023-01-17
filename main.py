@@ -50,13 +50,20 @@ class Main():
 			elif input_text[0] == "download":
 				search_file = input_text[1]
 
-				if os.path.isfile(self.path+search_file):
-					await self.bot.send_message(message.from_user.id,
-						"Отправляю...")
-					await message.reply_document(open(self.path+search_file, 'rb'))
+				if search_file == "#all":
+
+					crop_dir = os.listdir(path=self.path)
+					for file_name in crop_dir:
+						await message.reply_document(open(self.path+file_name, 'rb'))
+				
 				else:
-					await self.bot.send_message(message.from_user.id,
-						"Такого файла не существует!")
+					if os.path.isfile(self.path+search_file):
+						await self.bot.send_message(message.from_user.id,
+							"Отправляю...")
+						await message.reply_document(open(self.path+search_file, 'rb'))
+					else:
+						await self.bot.send_message(message.from_user.id,
+							"Такого файла не существует!")
 
 			elif input_text[0] == "pwd":
 				await self.bot.send_message(message.from_user.id,
