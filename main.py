@@ -12,14 +12,14 @@ from aiogram.types import Message, ReplyKeyboardMarkup, ReplyKeyboardRemove, Key
 
 
 class Main():
-	def __init__(self):
+	def __init__(self, config):
 		super(Main,self).__init__()
 		
-		self.token = "5820991971:AAHbItnxvAieTrGyRmQMbuov9DEz4WebtKY"
+		self.token = config['token_bot']
 		self.bot = Bot(token=self.token)
 		self.dp = Dispatcher(self.bot)
 
-		self.root_path = "./safe/"
+		self.root_path = config['root_path']
 		self.path = self.root_path
 
 	async def loop(self):
@@ -43,7 +43,6 @@ class Main():
 				output_to_bot = "В папке - '" + self.path + "' найдено:\n"
 				for file_name in crop_dir:
 					output_to_bot += file_name + "\n"
-
 
 				await self.bot.send_message(message.from_user.id,
 				output_to_bot)
@@ -77,8 +76,19 @@ class Main():
 		# RUN BOT
 		await self.dp.start_polling(self.bot)
 
-
 #	Run
 if __name__ == '__main__':
-	engine = Main()
+	if os.path.isfile('config.json'):
+		with open("config.json",'r') as file_config:
+			config = json.load(file_config)
+	else:
+		# Get Value
+		config = {}
+		config['token_bot'] = input("Введите токен ftp-клиента: ")
+		config['root_path'] = input('Введите путь до "Папки общего доступа": ')
+
+		with open("config.json",'w') as file_config:
+			json.dump(config, file_config)
+
+	engine = Main(config)
 	asyncio.run(engine.loop())
