@@ -1,3 +1,5 @@
+
+
 #	Import
 import asyncio
 import random
@@ -5,6 +7,7 @@ import datetime
 import time
 import os
 import json
+
 
 #		AIOGRAM
 from aiogram import Bot, Dispatcher, executor, types
@@ -83,8 +86,15 @@ class Main():
 		# RUN BOT
 		await self.dp.start_polling(self.bot)
 
+	# FUNCTION
+	def check_root(self, user_id):
+		# Проверяет, является ли пользователь рут пользователем
+		pass
+
 #	Run
 if __name__ == '__main__':
+
+	# Проверка CONFIG
 	if os.path.isfile('config.json'):
 		with open("config.json",'r') as file_config:
 			config = json.load(file_config)
@@ -97,5 +107,6 @@ if __name__ == '__main__':
 		with open("config.json",'w') as file_config:
 			json.dump(config, file_config)
 
+	# RUN
 	engine = Main(config)
 	asyncio.run(engine.loop())
