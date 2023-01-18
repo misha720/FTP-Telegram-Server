@@ -22,6 +22,7 @@ class Main():
 		self.bot = Bot(token=self.token)
 		self.dp = Dispatcher(self.bot)
 
+		self.root_users = config['root_users']
 		self.root_path = config['root_path']
 		self.path = self.root_path
 
@@ -50,7 +51,7 @@ class Main():
 				await self.bot.send_message(message.from_user.id,
 				output_to_bot)
 
-			elif input_text[0] == "download":
+			elif input_text[0] == "get":
 				search_file = input_text[1]
 
 				if search_file == "#all":
@@ -74,22 +75,43 @@ class Main():
 
 			elif input_text[0] == "cd":
 
-				crop_dir = os.listdir(path=self.path)
+				if input_text[1] == '~':
+					self.path = self.root_path
 
-				if os.path.isdir(self.path+input_text[1]):
-					self.path += input_text[1] + "/"
 				else:
-					await self.bot.send_message(message.from_user.id,
-						"Такой папки не существует!")
+					crop_dir = os.listdir(path=self.path)
 
+					if os.path.isdir(self.path+input_text[1]):
+						self.path += input_text[1] + "/"
+					else:
+						await self.bot.send_message(message.from_user.id,
+							"Такой папки не существует!")
+
+		@self.dp.message_handler(content_types=["document"])
+		async def add_file(file: Message):
+			if self.check_root(file.chat.id):
+				random_path = self.path+"file_"+str(random.randint(1000, 9999))
+
+				print("downloading document - "+str(file.document.file_id))
+
+				file_id = file.document.file_id
+				file = await self.bot.get_file(file_id)
+				await self.bot.download_file(file.file_path, random_path)
+			else:
+				await self.bot.send_message(file.chat.id,"Отказано в доступе!")
 
 		# RUN BOT
 		await self.dp.start_polling(self.bot)
 
+
 	# FUNCTION
 	def check_root(self, user_id):
 		# Проверяет, является ли пользователь рут пользователем
-		pass
+		for user in self.root_users:
+			if user == str(user_id):
+				return True
+		return False
+		
 
 #	Run
 if __name__ == '__main__':
@@ -103,6 +125,7 @@ if __name__ == '__main__':
 		config = {}
 		config['token_bot'] = input("Введите токен ftp-клиента: ")
 		config['root_path'] = input('Введите путь до "Папки общего доступа": ')
+		config['root_users'] = []
 
 		with open("config.json",'w') as file_config:
 			json.dump(config, file_config)
