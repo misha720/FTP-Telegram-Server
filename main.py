@@ -43,7 +43,7 @@ class Main():
 		@self.dp.message_handler(content_types="text")
 		async def text_types(message: Message):
 
-			input_text = str(message.text)
+			input_text = str(message.text).lower()
 			input_text = input_text.split()
 
 			if input_text[0] == "ls":
@@ -101,7 +101,7 @@ class Main():
 
 		@self.dp.message_handler(content_types=["document"])
 		async def add_file(file: Message):
-			self.check_user(message.from_user.id)
+			self.check_user(file.chat.id)
 
 			if self.check_root(file.chat.id):
 				random_path = self.path+"file_"+str(random.randint(1000, 9999))
