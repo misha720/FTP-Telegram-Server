@@ -15,7 +15,7 @@ from aiogram.types import Message, ReplyKeyboardMarkup, ReplyKeyboardRemove, Key
 
 
 class Main():
-	def __init__(self, config):
+	def __init__(self, config, list_user):
 		super(Main,self).__init__()
 		
 		self.token = config['token_bot']
@@ -25,12 +25,17 @@ class Main():
 		self.root_users = config['root_users']
 		self.root_path = config['root_path']
 		self.path = self.root_path
+		self.users = list_user
+		self.second_user = {}
 
 	async def loop(self):
 
 		# OnStarted
 		@self.dp.message_handler(commands=["start"])
 		async def start_command(message: Message):
+
+			self.check_user(message.from_user.id)
+
 			await self.bot.send_message(message.from_user.id,
 				"Добро пожаловать в FTP-Client")
 
@@ -42,6 +47,8 @@ class Main():
 			input_text = input_text.split()
 
 			if input_text[0] == "ls":
+				self.check_user(message.from_user.id)
+
 				crop_dir = os.listdir(path=self.path)
 
 				output_to_bot = "В папке - '" + self.path + "' найдено:\n"
@@ -52,6 +59,8 @@ class Main():
 				output_to_bot)
 
 			elif input_text[0] == "get":
+				self.check_user(message.from_user.id)
+
 				search_file = input_text[1]
 
 				if search_file == "#all":
@@ -70,19 +79,22 @@ class Main():
 							"Такого файла не существует!")
 
 			elif input_text[0] == "pwd":
+				self.check_user(message.from_user.id)
 				await self.bot.send_message(message.from_user.id,
 				self.path)
 
 			elif input_text[0] == "cd":
-
+				self.check_user(message.from_user.id)
 				if input_text[1] == '~':
 					self.path = self.root_path
+					self.cd_path(self.path)
 
 				else:
 					crop_dir = os.listdir(path=self.path)
 
 					if os.path.isdir(self.path+input_text[1]):
 						self.path += input_text[1] + "/"
+						self.cd_path(self.path)
 					else:
 						await self.bot.send_message(message.from_user.id,
 							"Такой папки не существует!")
@@ -111,6 +123,39 @@ class Main():
 			if user == str(user_id):
 				return True
 		return False
+
+	def save_users(self):
+		with open("users.json",'w') as file_users:
+			json.dump(self.users, file_users)
+
+	def check_user(self, user_id):
+		if len( self.users ) != 0:
+			for user in self.users:
+				if user['user_id'] == user_id:
+					self.second_user = user
+					return
+			self.add_user(user_id)
+		else:
+			self.users.append({
+				"user_id":user_id,
+				"path":self.root_path
+				})
+			self.save_users()
+
+	def add_user(self, user_id):
+		new_lot = {
+			"user_id" : user_id,
+			"path" : self.root_path
+		}
+		self.users.append(new_lot)
+		self.save_users()
+
+	def cd_path(self, path):
+		for user_item in range(len(self.users)):
+			if self.second_user['user_id'] == self.users[user_item]['user_id']:
+				self.users[user_item]['path'] = str(path)
+				self.save_users()
+
 		
 
 #	Run
@@ -130,6 +175,16 @@ if __name__ == '__main__':
 		with open("config.json",'w') as file_config:
 			json.dump(config, file_config)
 
+	# Users
+	if os.path.isfile('users.json'):
+		with open("users.json",'r') as file_users:
+			list_user = json.load(file_users)
+	else:
+		list_user = []
+		with open("users.json",'w') as file_users:
+			json.dump(list_user, file_users)
+
+
 	# RUN
-	engine = Main(config)
+	engine = Main(config, list_user)
 	asyncio.run(engine.loop())
