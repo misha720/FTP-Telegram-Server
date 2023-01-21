@@ -65,7 +65,7 @@ class Main():
 
 				if search_file == "#all":
 
-					crop_dir = os.listdir(path=self.path)
+					crop_dir = os.listdir(path=self.second_user['path'])
 					for file_name in crop_dir:
 						await message.reply_document(open(self.path+file_name, 'rb'))
 				
@@ -87,20 +87,22 @@ class Main():
 				self.check_user(message.from_user.id)
 				if input_text[1] == '~':
 					self.path = self.root_path
-					self.cd_path(self.path)
+					self.cd_path(message.from_user.id,self.path)
 
 				else:
 					crop_dir = os.listdir(path=self.path)
 
 					if os.path.isdir(self.path+input_text[1]):
 						self.path += input_text[1] + "/"
-						self.cd_path(self.path)
+						self.cd_path(message.from_user.id,self.path)
 					else:
 						await self.bot.send_message(message.from_user.id,
 							"Такой папки не существует!")
 
 		@self.dp.message_handler(content_types=["document"])
 		async def add_file(file: Message):
+			self.check_user(message.from_user.id)
+
 			if self.check_root(file.chat.id):
 				random_path = self.path+"file_"+str(random.randint(1000, 9999))
 
@@ -132,7 +134,7 @@ class Main():
 		if len( self.users ) != 0:
 			for user in self.users:
 				if user['user_id'] == user_id:
-					self.second_user = user
+					self.path = user['path']
 					return
 			self.add_user(user_id)
 		else:
@@ -150,9 +152,9 @@ class Main():
 		self.users.append(new_lot)
 		self.save_users()
 
-	def cd_path(self, path):
+	def cd_path(self, user_id, path):
 		for user_item in range(len(self.users)):
-			if self.second_user['user_id'] == self.users[user_item]['user_id']:
+			if user_id == self.users[user_item]['user_id']:
 				self.users[user_item]['path'] = str(path)
 				self.save_users()
 
